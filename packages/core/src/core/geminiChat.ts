@@ -417,9 +417,9 @@ export class GeminiChat {
       if (modelToUse.startsWith('gemini-3')) {
         config.thinkingConfig = {
           ...config.thinkingConfig,
-          thinkingBudget: undefined,
           thinkingLevel: ThinkingLevel.HIGH,
         };
+        delete config.thinkingConfig?.thinkingBudget;
       }
 
       return this.config.getContentGenerator().generateContentStream(
