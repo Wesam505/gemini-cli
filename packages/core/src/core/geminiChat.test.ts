@@ -10,7 +10,7 @@ import type {
   GenerateContentConfig,
   GenerateContentResponse,
 } from '@google/genai';
-import { ApiError } from '@google/genai';
+import { ApiError, ThinkingLevel } from '@google/genai';
 import type { ContentGenerator } from '../core/contentGenerator.js';
 import {
   GeminiChat,
@@ -953,6 +953,51 @@ describe('GeminiChat', () => {
           config: {},
         },
         'prompt-id-1',
+      );
+    });
+
+    it('should use thinkingLevel and remove thinkingBudget for gemini-3 models', async () => {
+      const response = (async function* () {
+        yield {
+          candidates: [
+            {
+              content: { parts: [{ text: 'response' }], role: 'model' },
+              finishReason: 'STOP',
+            },
+          ],
+        } as unknown as GenerateContentResponse;
+      })();
+      vi.mocked(mockContentGenerator.generateContentStream).mockResolvedValue(
+        response,
+      );
+
+      // pass a config with thinkingBudget
+      const configWithBudget = {
+        thinkingConfig: {
+          thinkingBudget: 1000,
+        },
+      };
+
+      const stream = await chat.sendMessageStream(
+        'gemini-3.0-flash',
+        { message: 'hello', config: configWithBudget },
+        'prompt-id-thinking-level',
+      );
+      for await (const _ of stream) {
+        // consume stream
+      }
+
+      expect(mockContentGenerator.generateContentStream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gemini-3.0-flash',
+          config: expect.objectContaining({
+            thinkingConfig: {
+              thinkingBudget: undefined,
+              thinkingLevel: ThinkingLevel.HIGH,
+            },
+          }),
+        }),
+        'prompt-id-thinking-level',
       );
     });
   });

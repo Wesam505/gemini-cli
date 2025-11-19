@@ -7,13 +7,14 @@
 // DISCLAIMER: This is a copied version of https://github.com/googleapis/js-genai/blob/main/src/chats.ts with the intention of working around a key bug
 // where function responses are not treated as "valid" responses: https://b.corp.google.com/issues/420354090
 
-import type {
-  GenerateContentResponse,
-  Content,
-  GenerateContentConfig,
-  SendMessageParameters,
-  Part,
-  Tool,
+import {
+  type GenerateContentResponse,
+  type Content,
+  type GenerateContentConfig,
+  type SendMessageParameters,
+  type Part,
+  ThinkingLevel,
+  type Tool,
 } from '@google/genai';
 import { toParts } from '../code_assist/converter.js';
 import { createUserContent, FinishReason } from '@google/genai';
@@ -410,6 +411,16 @@ export class GeminiChat {
       }
 
       effectiveModel = modelToUse;
+      const config = { ...this.generationConfig, ...params.config };
+
+      // TODO(joshualitt): Clean this up with model configs.
+      if (modelToUse.startsWith('gemini-3')) {
+        config.thinkingConfig = {
+          ...config.thinkingConfig,
+          thinkingBudget: undefined,
+          thinkingLevel: ThinkingLevel.HIGH,
+        };
+      }
 
       return this.config.getContentGenerator().generateContentStream(
         {
@@ -418,7 +429,7 @@ export class GeminiChat {
             modelToUse === PREVIEW_GEMINI_MODEL
               ? contentsForPreviewModel
               : requestContents,
-          config: { ...this.generationConfig, ...params.config },
+          config,
         },
         prompt_id,
       );
