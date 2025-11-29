@@ -16,5 +16,10 @@
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "vitest.disableWorkspaceWarning": true
+  "vitest.disableWorkspaceWarning": true,
+  "testing.coverageBarThresholds": {
+    "red": 0,
+    "yellow": 60,
+    "green": 90
+  }
 }
